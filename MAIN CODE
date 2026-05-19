@@ -1,0 +1,134 @@
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.preprocessing import LabelEncoder, StandardScaler , MinMaxScaler
+from sklearn.metrics import r2_score
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+r=pd.read_csv("students_performance_dataset.csv")
+
+model1=LinearRegression()
+model2= LogisticRegression()
+encoder=LabelEncoder()
+scaler=StandardScaler()
+
+
+features = ["Attendance_%", "Midterm_Score", "Assignments_Avg", "Projects_Score", "Study_Hours_Per_Week"]
+
+x=r[features]
+x=scaler.fit_transform(x)
+y=r["Total_Score"]
+Y=r["Grade"]
+
+y_encoded=encoder.fit_transform(Y) #(0=A , 1=B, 2=C, 3=D, 4=F)
+model1.fit(x,y)
+model2.fit(x,y_encoded)
+
+a=int(input("Enter your Attendance: "))
+b=int(input("Enter your Midterm Score: "))
+c=int(input("Enter your Assignment Marks: "))
+d=int(input("Enter your Project Score: "))
+e=int(input("Enter your Study Hours Per Week: "))
+
+input_df = scaler.transform(pd.DataFrame([[a, b, c, d, e]], columns=features))
+
+prediction=model1.predict(input_df)
+prediction2=model2.predict(input_df)[0]
+
+if prediction2==0:
+    grade="A"
+elif prediction2==1:
+    grade="B"
+elif prediction2==2:
+    grade="C"
+elif prediction2==3:
+    grade="D"
+else:
+    grade="F"
+
+
+print("YOUR PREDICTED SCORE IS: ",round(prediction[0],2))
+print("YOUR PREDICTED GRADE IS: ",grade)
+
+r2=str(input(("DO YOU WANT TO CHECK EFFICIENCY OF THE MODEL? ")))
+if r2=="yes":
+    r2score=r2_score(y,model1.predict(x))
+    r2score=round(r2score,2)
+    if r2score<0:
+        print("WORSE MODEL")
+    elif 0<=r2score<=0.25:
+        print("USELESS MODEL")
+    elif 0.26<=r2score<=0.5:
+        print('AVERAGE MODEL')
+    elif 0.51<=r2score<=0.8:
+        print("GOOD MODEL")
+    elif 0.81<=r2score<=1:
+        print("PERFECT MODEL")
+else:
+    print("ok")
+
+
+rel=str(input("DO YOU ALSO WANT TO SEE THE RELATION BETWEEN THE FACTORS AFFECTING YOUR TOTAL SCORE? "))
+if rel=="yes":
+    print("Attendance VS Total Score (PRESS 1)")
+    print("Study Hours Vs Total Score (PRESS 2)")
+    print("Assignment Marks Vs Total Score (PRESS 3)")
+    ans=int(input("="))
+    if ans == 1:
+        fig, pl = plt.subplots(figsize=(10, 6))
+        hb = pl.hexbin(r["Attendance_%"], r["Total_Score"], gridsize=30, cmap='Reds')
+        fig.colorbar(hb, label='Student count')
+
+        m, c = np.polyfit(r["Attendance_%"], r["Total_Score"], 1)
+        x = np.linspace(50, 100, 100)
+        pl.plot(x, m * x + c, color='crimson', linestyle='--', linewidth=2, label=f'Trend (r slope={m:.2f})')
+
+        pl.set_xlabel('Attendance %', fontsize=12)
+        pl.set_ylabel('Total Score', fontsize=12)
+        pl.set_title('Attendance VS Total Score', fontsize=14)
+        pl.set_xlim(48, 102)
+        pl.set_ylim(30, 100)
+        pl.legend()
+        pl.grid(alpha=0.2)
+        plt.tight_layout()
+        plt.show()
+    elif ans == 2:
+        fig, pl = plt.subplots(figsize=(10, 6))
+        hb = pl.hexbin(r["Study_Hours_Per_Week"], r["Total_Score"], gridsize=30, cmap='Reds')
+        fig.colorbar(hb, label='Student count')
+
+        m, c = np.polyfit(r["Study_Hours_Per_Week"], r["Total_Score"], 1)
+        x = np.linspace(r["Study_Hours_Per_Week"].min(), r["Study_Hours_Per_Week"].max(), 100)
+        pl.plot(x, m * x + c, color='crimson', linestyle='--', linewidth=2, label=f'Trend (r slope={m:.2f})')
+
+        pl.set_xlabel('Study Hours', fontsize=12)
+        pl.set_ylabel('Total Score', fontsize=12)
+        pl.set_title('Study Hours VS Total Score', fontsize=14)
+        pl.set_xlim(r["Study_Hours_Per_Week"].min() - 1, r["Study_Hours_Per_Week"].max() + 1)
+        pl.set_ylim(r["Total_Score"].min() - 5, r["Total_Score"].max() + 5)
+        pl.legend()
+        pl.grid(alpha=0.2),
+        plt.tight_layout()
+        plt.show()
+    elif ans == 3:
+        fig, pl = plt.subplots(figsize=(10, 6))
+        hb = pl.hexbin(r["Assignments_Avg"], r["Total_Score"], gridsize=30, cmap='Reds')
+        fig.colorbar(hb, label='Student count')
+
+        m, c = np.polyfit(r["Assignments_Avg"], r["Total_Score"], 1)
+        x = np.linspace(r["Assignments_Avg"].min(), r["Assignments_Avg"].max(), 100)
+        pl.plot(x, m * x + c, color='crimson', linestyle='--', linewidth=2, label=f'Trend (r slope={m:.2f})')
+
+        pl.set_xlabel('Assignment Marks', fontsize=12)
+        pl.set_ylabel('Total Score', fontsize=12)
+        pl.set_title('Assignment Marks VS Total Score', fontsize=14)
+        pl.set_xlim(r["Assignments_Avg"].min() - 1, r["Assignments_Avg"].max() + 1)
+        pl.set_ylim(r["Total_Score"].min() - 5, r["Total_Score"].max() + 5)
+        pl.legend()
+        pl.grid(alpha=0.2),
+        plt.tight_layout()
+        plt.show()
+    else:
+        print("wrong input")
+
+
